@@ -89,7 +89,7 @@ namespace JarradPrice.Function.Endpoint
             // if no json passed
             if (String.IsNullOrEmpty(json)) return new BadRequestResult();
             // must check ID of incoming skill to verify that the request came from our skill
-            string idCheck = "amzn1.ask.skill.ad97d3eb-4c6e-4830-bbd7-293fb151c41a";
+            string idCheck = GetEnvironmentVariable("ALEXA_SKILL_ID");
             JObject jsonObject = JObject.Parse(json);
             // if applicationId does not match, drop the request
             if ((string)jsonObject["session"]["application"]["applicationId"] != idCheck)
