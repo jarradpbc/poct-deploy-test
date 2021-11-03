@@ -37,7 +37,7 @@ jobs:
       uses: Azure/functions-action@v1.3.2
       id: fa
       with:
-        app-name: 'seng4211-alexa-endpoint'
+        app-name: ${{ secrets.AZURE_NAME }}
         slot-name: 'production'
         package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
         publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
