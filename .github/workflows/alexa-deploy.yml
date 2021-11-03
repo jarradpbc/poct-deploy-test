@@ -1,0 +1,42 @@
+# Deploys the Alexa Skill
+-name: ASK CLI Deployment - alexa-skill
+
+on:
+  # Triggers the workflow on push request events but only for the dev branch
+  # also only triggers when the push event includes a file in the alexa-skill directory
+  push:
+    branches:
+        - dev
+    paths:
+      - 'alexa-skill/**'
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # Must do a token replace of the skill id and enpoint uri
+      - name: Find and replace skill.json
+        run: find skill.json -type f -exec sed -i ''s+#{EndpointUri}#+${{ secrets.ALEXA_ENDPOINT_URI }}+g'' {} \;
+        working-directory: ./alexa-skill/skill-package
+      - name: Find and replace ask-states.json
+        run: find ask-states.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
+        working-directory: ./alexa-skill/.ask
+      - name: Find and replace ask-resources.json
+        run: find ask-resources.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
+        working-directory: ./alexa-skill
+      # Install CLI and deploy
+      - name: Deploy skill
+        run: |
+          sudo npm install -g ask-cli;
+          ask deploy;
+        working-directory: ./alexa-skill
+        env:
+          ASK_ACCESS_TOKEN: ${{ secrets.ALEXA_ACCESS_TOKEN }}
+          ASK_REFRESH_TOKEN: ${{ secrets.ALEXA_REFRESH_TOKEN }}
+          ASK_VENDOR_ID: ${{ secrets.ALEXA_VENDOR_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ALEXA_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ALEXA_SECRET_ACCESS_KEY }}
+          SKILL_ID: ${{ secrets.ALEXA_SKILL_ID }}
