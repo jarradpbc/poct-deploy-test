@@ -1,50 +1,38 @@
+# Deploys the Alexa Skill
 name: ASK CLI Deployment - alexa-skill
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push request events but only for the main branch
+  # Triggers the workflow on push request events but only for the dev branch
   # also only triggers when the push event includes a file in the alexa-skill directory
   push:
     branches:
-        - master
         - dev
     paths:
       - 'alexa-skill/**'
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  
-defaults:
-  run:
-    working-directory: alexa-skill
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-
       # Must do a token replace of the skill id and enpoint uri
       - name: Find and replace skill.json
         run: find skill.json -type f -exec sed -i ''s+#{EndpointUri}#+${{ secrets.ALEXA_ENDPOINT_URI }}+g'' {} \;
         working-directory: ./alexa-skill/skill-package
-        
       - name: Find and replace ask-states.json
         run: find ask-states.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
         working-directory: ./alexa-skill/.ask
-        
       - name: Find and replace ask-resources.json
         run: find ask-resources.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
-      
-      # Install the ask cli and deploy
-      - run: sudo npm install -g ask-cli
-      - run: ask deploy
+        working-directory: ./alexa-skill
+      # Install CLI and deploy
+      - name: Deploy skill
+        run: |
+          sudo npm install -g ask-cli;
+          ask deploy;
+        working-directory: ./alexa-skill
         env:
           ASK_ACCESS_TOKEN: ${{ secrets.ALEXA_ACCESS_TOKEN }}
           ASK_REFRESH_TOKEN: ${{ secrets.ALEXA_REFRESH_TOKEN }}
