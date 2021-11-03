@@ -5,8 +5,7 @@ on:
   # Triggers the workflow on push request events but only for the dev branch
   # also only triggers when the push event includes a file in the alexa-skill directory
   push:
-    branches:
-        - dev
+    branches: [ dev ]
     paths:
       - 'alexa-skill/**'
 
