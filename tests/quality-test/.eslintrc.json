@@ -1,0 +1,18 @@
+{
+    "extends": "strongloop",
+    "parserOptions": {
+      "ecmaVersion": 2020
+    },
+    "plugins": [
+      "googleappsscript"
+    ],
+    "env": {
+      "es6": true,
+      "node": true,
+      "mocha": true,
+      "googleappsscript/googleappsscript": true
+    },
+    "rules":{
+      "max-len": [2, 120, 2]
+    }
+}

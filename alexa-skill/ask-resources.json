@@ -1,0 +1,11 @@
+{
+  "askToolkitResourcesVersion": "2020-04-15",
+  "profiles": {
+    "__ENVIRONMENT_ASK_PROFILE__": {
+      "skillId": "#{SkillId}#",
+      "skillMetadata": {
+        "src": "skill-package"
+      }
+    }
+  }
+}

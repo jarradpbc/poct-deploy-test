@@ -1,0 +1,43 @@
+# Creates a beta for the current Alexa Skill if one has not already been started
+# then sends an invite to the passed email if not already a tester
+name: Alexa Skill Beta - create, start, update, and invite emails
+
+on:
+  workflow_dispatch:
+    inputs:
+      EMAIL:
+        description: 'Tester email'
+        required: true
+      FEEDBACK_EMAIL:
+        description: 'Feedback email'
+        default: 'none'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # Must do a token replace of the skill id and enpoint uri
+      - name: Find and replace skill.json
+        run: find skill.json -type f -exec sed -i ''s+#{EndpointUri}#+${{ secrets.ALEXA_ENDPOINT_URI }}+g'' {} \;
+        working-directory: ./alexa-skill/skill-package
+      - name: Find and replace ask-states.json
+        run: find ask-states.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
+        working-directory: ./alexa-skill/.ask
+      - name: Find and replace ask-resources.json
+        run: find ask-resources.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
+        working-directory: ./alexa-skill
+      # Installs the ASK CLI which is used to run the smapi commands
+      - name: Run smapi
+        run: |
+          sudo npm install -g ask-cli;
+          chmod +x -R ./tests;
+          cd tests/skill-beta/;
+          ./beta_initialiser.sh ${{ github.event.inputs.EMAIL }} ${{ github.event.inputs.FEEDBACK_EMAIL }}
+        env:
+          ASK_ACCESS_TOKEN: ${{ secrets.ALEXA_ACCESS_TOKEN }}
+          ASK_REFRESH_TOKEN: ${{ secrets.ALEXA_REFRESH_TOKEN }}
+          ASK_VENDOR_ID: ${{ secrets.ALEXA_VENDOR_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ALEXA_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ALEXA_SECRET_ACCESS_KEY }}
+          SKILL_ID: ${{ secrets.ALEXA_SKILL_ID }}

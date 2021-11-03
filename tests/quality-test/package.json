@@ -1,0 +1,14 @@
+{
+  "name": "poct-alexa-apps",
+  "description": "Test libraries for static analysis",
+  "scripts": {
+    "lint": "eslint --format junit --output-file reports/eslint/eslint.xml --ext .js ../../spreadsheet-gas/",
+    "lint-html": "eslint -f node_modules/eslint-detailed-reporter/lib/detailed.js -o reports/eslint/report.html --ext .js ../../spreadsheet-gas/"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-strongloop": "^2.1.0",
+    "eslint-detailed-reporter": "^0.8.0",
+    "eslint-plugin-googleappsscript": "^1.0.4"
+  }
+}

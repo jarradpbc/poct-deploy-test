@@ -1,0 +1,134 @@
+# Runs tests then submits Alexa Skill to certification
+name: Alexa Skill Submit - test, deploy, and submit Skill
+
+on:
+  push:
+    branches:
+        - master
+    paths:
+      - 'alexa-skill/**'
+      
+  workflow_dispatch:
+
+jobs:
+  # Bring execution permission to be able to execute all the tests
+  checkout:
+    runs-on: ubuntu-latest
+    name: Checkout
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - run: |
+          chmod +x -R ./tests;
+          ls -la
+  # Deploy the Alexa Skill to the Alexa cloud in the development stage
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    needs: checkout
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    # must do a token replace of the skill id and enpoint uri
+    - name: Find and replace skill.json
+      run: find skill.json -type f -exec sed -i ''s+#{EndpointUri}#+${{ secrets.ALEXA_ENDPOINT_URI }}+g'' {} \;
+      working-directory: ./alexa-skill/skill-package
+    - name: Find and replace ask-states.json
+      run: find ask-states.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
+      working-directory: ./alexa-skill/.ask
+    - name: Find and replace ask-resources.json
+      run: find ask-resources.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
+      working-directory: ./alexa-skill
+    # install CLI and deploy
+    - run: sudo npm install -g ask-cli
+    - run: ask deploy
+      working-directory: ./alexa-skill
+      env:
+        ASK_ACCESS_TOKEN: ${{ secrets.ALEXA_ACCESS_TOKEN }}
+        ASK_REFRESH_TOKEN: ${{ secrets.ALEXA_REFRESH_TOKEN }}
+        ASK_VENDOR_ID: ${{ secrets.ALEXA_VENDOR_ID }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.ALEXA_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.ALEXA_SECRET_ACCESS_KEY }}
+        SKILL_ID: ${{ secrets.ALEXA_SKILL_ID }}
+  # Check if the interaction model we have uploaded has conflicts
+  check-utterance-conflicts:
+    runs-on: ubuntu-latest
+    name: Check Utterance Conflicts
+    needs: deploy
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - run: |
+        sudo npm install -g ask-cli;
+        chmod +x -R ./tests;
+        cd tests/vui-test/;
+        ./interaction_model_checker.sh $SKILL_ID
+      env:
+        ASK_ACCESS_TOKEN: ${{ secrets.ALEXA_ACCESS_TOKEN }}
+        ASK_REFRESH_TOKEN: ${{ secrets.ALEXA_REFRESH_TOKEN }}
+        ASK_VENDOR_ID: ${{ secrets.ALEXA_VENDOR_ID }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.ALEXA_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.ALEXA_SECRET_ACCESS_KEY }}
+        SKILL_ID: ${{ secrets.ALEXA_SKILL_ID }}
+  # Validate Alexa Skill before submitting it to certification
+  validation-test:
+    runs-on: ubuntu-latest
+    name: Validation test
+    needs: check-utterance-conflicts
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - run: |
+        sudo npm install -g ask-cli;
+        chmod +x -R ./tests;
+        cd tests/validation-test/;
+        ./skill_validation_checker.sh $SKILL_ID
+      env:
+        ASK_ACCESS_TOKEN: ${{ secrets.ALEXA_ACCESS_TOKEN }}
+        ASK_REFRESH_TOKEN: ${{ secrets.ALEXA_REFRESH_TOKEN }}
+        ASK_VENDOR_ID: ${{ secrets.ALEXA_VENDOR_ID }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.ALEXA_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.ALEXA_SECRET_ACCESS_KEY }}
+        SKILL_ID: ${{ secrets.ALEXA_SKILL_ID }}
+  # Submit Alexa Skill to certification
+  submit:
+    runs-on: ubuntu-latest
+    name: Submit
+    needs: validation-test
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    # must do a token replace of the skill id and enpoint uri
+    - name: Find and replace skill.json
+      run: find skill.json -type f -exec sed -i ''s+#{EndpointUri}#+${{ secrets.ALEXA_ENDPOINT_URI }}+g'' {} \;
+      working-directory: ./alexa-skill/skill-package
+    - name: Find and replace ask-states.json
+      run: find ask-states.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
+      working-directory: ./alexa-skill/.ask
+    - name: Find and replace ask-resources.json
+      run: find ask-resources.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
+      working-directory: ./alexa-skill
+    # install CLI and submit
+#    - run: sudo npm install -g ask-cli
+    - run: echo "debug" #ask smapi submit-skill-for-certification -s ${{ secrets.ALEXA_SKILL_ID }} --publication-method MANUAL_PUBLISHING
+      working-directory: ./alexa-skill  
+      env:
+        ASK_ACCESS_TOKEN: ${{ secrets.ALEXA_ACCESS_TOKEN }}
+        ASK_REFRESH_TOKEN: ${{ secrets.ALEXA_REFRESH_TOKEN }}
+        ASK_VENDOR_ID: ${{ secrets.ALEXA_VENDOR_ID }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.ALEXA_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.ALEXA_SECRET_ACCESS_KEY }}
+        SKILL_ID: ${{ secrets.ALEXA_SKILL_ID }}
+  # Store the entire code as an artifact
+  store-artifacts:
+    runs-on: ubuntu-latest
+    name: Store Artifacts
+    needs: submit
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Upload code
+      uses: actions/upload-artifact@v2
+      with:
+        name: code
+        path: ${{ github.workspace }}

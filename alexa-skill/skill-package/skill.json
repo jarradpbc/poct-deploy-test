@@ -1,0 +1,48 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "en-AU": {
+          "summary": "Answers FAQ on point of care devices.",
+          "examplePhrases": [
+            "Alexa open point of care device assistant",
+            "point of care device assistant"
+          ],
+          "keywords": [],
+          "name": "PocT Device Information Assistant",
+          "description": "Sample Full Description",
+          "smallIconUri": "file://assets/images/en-AU_ICON_108.png",
+          "largeIconUri": "file://assets/images/en-AU_ICON_512.png"
+        }
+      },
+      "automaticDistribution": {
+        "isActive": false
+      },
+      "isAvailableWorldwide": true,
+      "testingInstructions": "This skill contains intents that map to FAQ's for point of care service devices. This information is drawn from pre-existing device manuals.",
+      "category": "ORGANIZERS_AND_ASSISTANTS",
+      "distributionMode": "PUBLIC",
+      "distributionCountries": []
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "sslCertificateType": "Wildcard",
+          "uri": "#{EndpointUri}#"
+        },
+        "interfaces": []
+      }
+    },
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "locales": {
+        "en-AU": {}
+      },
+      "containsAds": false,
+      "isExportCompliant": true,
+      "isChildDirected": false,
+      "usesPersonalInfo": false
+    }
+  }
+}

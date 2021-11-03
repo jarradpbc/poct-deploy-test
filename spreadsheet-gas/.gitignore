@@ -1,0 +1,4 @@
+node_modules/
+package-lock.json
+# clasp local settings file
+.clasp.json
