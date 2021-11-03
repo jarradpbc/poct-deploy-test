@@ -1,5 +1,5 @@
 # Deploys the Alexa Skill
--name: ASK CLI Deployment - alexa-skill
+name: ASK CLI Deployment - alexa-skill
 
 on:
   # Triggers the workflow on push request events but only for the dev branch
