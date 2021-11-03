@@ -1,0 +1,49 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "en-AU": {
+          "summary": "Sample Short Description",
+          "examplePhrases": [
+            "Alexa open hello world",
+            "hello",
+            "help"
+          ],
+          "keywords": [],
+          "name": "Health App Prototype",
+          "description": "Sample Full Description",
+          "smallIconUri": "file://assets/images/en-AU_smallIconUri.png",
+          "largeIconUri": "file://assets/images/en-AU_largeIconUri.png"
+        }
+      },
+      "automaticDistribution": {
+        "isActive": false
+      },
+      "isAvailableWorldwide": true,
+      "testingInstructions": "Sample Testing Instructions.",
+      "category": "KNOWLEDGE_AND_TRIVIA",
+      "distributionMode": "PUBLIC",
+      "distributionCountries": []
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "sslCertificateType": "Wildcard",
+          "uri": "#{EndpointUri}#"
+        },
+        "interfaces": []
+      }
+    },
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "locales": {
+        "en-AU": {}
+      },
+      "containsAds": false,
+      "isExportCompliant": true,
+      "isChildDirected": false,
+      "usesPersonalInfo": false
+    }
+  }
+}

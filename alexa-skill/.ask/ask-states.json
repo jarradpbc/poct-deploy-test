@@ -1,0 +1,12 @@
+{
+  "askToolkitStatesVersion": "2020-04-15",
+  "profiles": {
+    "__ENVIRONMENT_ASK_PROFILE__": {
+      "skillId": "#{SkillId}#",
+      "skillMetadata": {
+        "eTag": "0a6e7c2e55c0f55339f1c54f70a0daef",
+        "lastDeployHash": "oYZxfLfVvTJ1PaBfqD2RtJA+r3w="
+      }
+    }
+  }
+}

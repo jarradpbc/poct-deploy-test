@@ -1,0 +1,240 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script>
+// initialisation function to run fill table function
+function onDbGetResponseRecieved(inputJson) {
+    buildIntentsTable(inputJson, "#istat");
+}
+// call connection driver get function
+google.script.run.withSuccessHandler(onDbGetResponseRecieved).databaseGet();
+
+/**
+ * openTab
+ * Changes the displayed table
+ *
+ * @param {object} event - The tab button event
+ * @param {string} selector - The html id to display
+ */
+function openTab(event, selector) {
+  let x = $(".table");
+  for (let i = 0; i < x.length; i++) {
+    x[i].style.display = "none";
+  }
+  let tablinks = $(".tablink");
+  for (let i = 0; i < x.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" clicked-tab", "");
+  }
+  $(selector).show();
+  event.currentTarget.className += " clicked-tab";
+}
+
+/**
+ * buildIntentsTable
+ * Builds table using json input, can simplify a lot since the returned json is of a known format
+ * Only headers that there will ever be is "intent" and "response"
+ *
+ * @param {object} inputJson - [{ intent: (string), response: (string) }]
+ * @param {string} selector - The html id of table to create
+ */
+function buildIntentsTable(inputJson, selector) {
+    // create table
+    let newTable = $('<table id="' + selector.substring(1) + '" class="table" />');
+    $("body").append(newTable);
+    let $target = $(selector);
+    // create headers
+    var headerTr$ = $('<tr/>');
+    headerTr$.append($('<th/>').html("Intent"));
+    headerTr$.append($('<th/>').html("Response"));
+    $target.append(headerTr$);
+    // for each json entry
+    for (var i = 0; i < inputJson.length; i++) {
+        // create row
+        var row$ = $('<tr/>');
+        // get intent
+        var cellValue = inputJson[i]["intent"];
+        // add cell with value
+        row$.append($('<td contenteditable="true"/>').html(cellValue));
+        // get response
+        var cellValue = inputJson[i]["response"];
+        // add cell with value
+        row$.append($('<td contenteditable="true"/>').html(cellValue));
+        // add row
+        $target.append(row$);
+    }
+    // add event listeners for table
+    addEventListeners(selector);
+    // add button for adding new rows
+    let newButton = $('<input type="button" value="Add Row" onclick="addRow(\''  
+        + selector + '\')" />');
+    $target.append(newButton);
+    // add button for export
+    newButton = $('<input type="button" value="Export" onclick="exportTable(\''  
+        + selector + '\')" />');
+    $target.append(newButton);
+    // add navbar button
+    newTab = $('<input type="button" class="navbar-button tablink clicked-tab"' 
+      + 'value="' + selector.substring(1) + '"'
+      + 'onclick="openTab(event, \'' + selector + '\')" />');
+    $("#navbar").append(newTab);
+    // remove loading icon
+    if ($("#loader").length  > 0){
+        $("#loader").remove();
+    }
+}
+
+/**
+ * addEventListeners
+ * Creates event listeners for table
+ * Needed for handling validation on table modification
+ *
+ * @param {string} selector - The html id of table to add handlers to
+ */
+function addEventListeners(selector) {
+    let $target = $(selector);
+    // when something is pasted into the table
+    $target.on("paste", function(event) {
+        // ensure pasted content is only a string
+        let paste = (event.originalEvent.clipboardData || window.clipboardData).getData('text');
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return false;
+        selection.deleteFromDocument();
+        selection.getRangeAt(0).insertNode(document.createTextNode(paste));
+        event.preventDefault();
+
+        // run validation check after paste
+        setTimeout(function() {
+            checkTable(selector);
+        }, 0);
+    });
+    // when table has input run validation check
+    $target.on('input', (e) => {
+        checkTable(selector);
+    });
+}
+
+/**
+ * checkTable
+ * Checks all cells of table
+ * If any are invalid sets cell as red and displays warning
+ *
+ * @param {string} selector - The html id of table to check
+ */
+function checkTable(selector) {
+    // get HTML DOM object
+    let $table = $(selector)[0];
+    // get every table row
+    let tr = $table.getElementsByTagName('tr')
+    // are all cells valid
+    let allValid = true;
+    // for each row
+    for (let i = 0; i < tr.length; i++) {
+        // get cells in the row
+        let cells = tr[i].getElementsByTagName('td');
+        // for each cell
+        for (let cell = 0, len = cells.length; cell < len; cell++) {
+            // if invalid input
+            if (!isValid(cells[cell].innerHTML)) {
+                // make cell red
+                cells[cell].style.backgroundColor = 'lightcoral';
+                // all cells are not valid
+                allValid = false;
+            }
+            else {
+                // make cell white
+                cells[cell].style.backgroundColor = 'white';
+            }
+        }
+    }
+    // if any cell is not valid display warning
+    if(!allValid) {
+        let errorDiv = document.getElementById('warning');
+        errorDiv.innerHTML = "Invalid input, no special characters or blank cells allowed.";
+    }
+    else {
+        let errorDiv = document.getElementById('warning');
+        errorDiv.innerHTML = "";
+    }
+}
+
+/**
+ * isValid
+ * Checks input against regex
+ *
+ * @param {string} cellInput - The innerHTML of a cell
+ * @returns {boolean} - True if valid, false if not
+ */
+function isValid(cellInput) {
+    // match special characters
+    let specialCharRegex = /[!@#$%^&*()+\-=\[\]{};':"\\|<>\/?\n\t\r]+/;
+    // match white space
+    let whiteSpaceRegex = /^\s*$/;
+    if(specialCharRegex.test(cellInput) || whiteSpaceRegex.test(cellInput)) {
+        return false;
+    } 
+    else {
+        return true;
+    }
+}
+
+/**
+ * addRow
+ * Appends new row to table
+ *
+ * @param {string} selector - The html id of table to add row to
+ */
+function addRow(selector) {
+    var row$ = $('<tr/>');
+    row$.append($('<td contenteditable="true"/>').html("!insert intent!"));
+    row$.append($('<td contenteditable="true"/>').html("!insert response!"));
+    $(selector).append(row$);
+    // ensure that user has to change row values
+    checkTable(selector);
+}
+
+/**
+ * exportTable
+ * Turns table contents into a json
+ * Then sends to ConnectionDriver to send to API
+ *
+ * @param {string} selector - The html id of table to export
+ */
+function exportTable(selector) {
+    let errorDiv = document.getElementById('warning');
+    if (errorDiv.innerHTML != "") {
+        alert("Unable to export with invalid entries.");
+        return;
+    }
+
+    // get HTML DOM object
+    let $table = $(selector)[0];
+    // variable to hold table json
+    let tableJson = [];
+    // headers, ours are known
+    let headers = ["intent", "response"];
+    // go through cells
+    for (let i = 1; i < $table.rows.length; i++) {
+        let tableRow = $table.rows[i];
+        let rowData = {};
+
+        for (let j = 0; j < tableRow.cells.length; j++) {
+            rowData[ headers[j] ] = tableRow.cells[j].innerHTML;
+        }
+        tableJson.push(rowData);
+    }
+    // id of device is table id
+    let id = selector.substring(1);
+    // json to send to connection driver
+    let exportJson = {
+        "id": id
+    };
+    exportJson["intents"] = tableJson;
+    // must stringify
+    exportJson = JSON.stringify(exportJson);
+    // call connection driver put function
+    google.script.run.withSuccessHandler(onDbPutResponseRecieved).databasePut(exportJson, id);
+}
+
+function onDbPutResponseRecieved(putResponse) {
+  //let div = document.getElementById('output');
+  //div.innerHTML = putResponse;
+}
+</script>
