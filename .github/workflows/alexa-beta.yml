@@ -27,6 +27,19 @@ jobs:
       - name: Find and replace ask-resources.json
         run: find ask-resources.json -type f -exec sed -i ''s/#{SkillId}#/${{ secrets.ALEXA_SKILL_ID }}/g'' {} \;
         working-directory: ./alexa-skill
+      # Install CLI and deploy
+      - name: Deploy skill
+      - run: |
+          sudo npm install -g ask-cli;
+          ask deploy;
+        working-directory: ./alexa-skill
+        env:
+          ASK_ACCESS_TOKEN: ${{ secrets.ALEXA_ACCESS_TOKEN }}
+          ASK_REFRESH_TOKEN: ${{ secrets.ALEXA_REFRESH_TOKEN }}
+          ASK_VENDOR_ID: ${{ secrets.ALEXA_VENDOR_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ALEXA_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ALEXA_SECRET_ACCESS_KEY }}
+          SKILL_ID: ${{ secrets.ALEXA_SKILL_ID }}
       # Installs the ASK CLI which is used to run the smapi commands
       - name: Run smapi
         run: |
